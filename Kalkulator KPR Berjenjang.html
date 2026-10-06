@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator KPR Berjenjang</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#16302b;--mut:#5d716c;--line:#d5dfdb;--acc:#0f6b5c;--hd:#e4ede9;--c0:#0f6b5c;--c1:#2f6fb0;--c2:#c9871f;--c3:#b23a48;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1917;--card:#16231f;--ink:#e6f0ec;--mut:#93a8a2;--line:#2a3d37;--acc:#4cc2ac;--hd:#1d2e29;--c0:#4cc2ac;--c1:#6aa8e6;--c2:#e3a94b;--c3:#ee7a88}}
+:root[data-theme="dark"]{--bg:#0e1917;--card:#16231f;--ink:#e6f0ec;--mut:#93a8a2;--line:#2a3d37;--acc:#4cc2ac;--hd:#1d2e29;--c0:#4cc2ac;--c1:#6aa8e6;--c2:#e3a94b;--c3:#ee7a88}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+main{max-width:820px;margin:0 auto;padding:20px 16px 40px}
+h1{font:600 28px/1.15 Fraunces,Georgia,serif;margin:0 0 4px}
+h2{font-size:16px;margin:0 0 10px}
+p.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.tier{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0 10px 12px;border-left:4px solid var(--c);margin-bottom:6px}
+.tier .hd{grid-column:1/-1;display:flex;justify-content:space-between;font-weight:600}
+.tier .hd span{font-weight:400;color:var(--mut);font-size:13px}
+.hint{font-size:13px;color:var(--mut);margin:6px 0 0}
+.tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tot small,.tc small{display:block;color:var(--mut);font-size:12px}
+.tot b{font-size:17px}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:16px}
+.tc{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:12px 14px}
+.tc h3{margin:0 0 2px;font-size:15px}
+.tc .per{color:var(--mut);font-size:13px;margin-bottom:8px}
+.tc div.r{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.tc .r b{text-align:right}
+.wrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--hd)}
+th:first-child,td:first-child{text-align:left}
+.ex{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px}
+button{font:inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.err{color:var(--c3);font-size:14px}
+@media (max-width:520px){.tot{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Kalkulator KPR Berjenjang</h1>
+<p class="sub">Isi 1 sampai 4 tahap bunga. Cicilan dihitung per bulan.</p>
+
+<section class="card">
+<div class="grid">
+<div class="full"><label for="skema">Skema perhitungan</label>
+<select id="skema">
+<option value="anuitas">Anuitas (cicilan tetap per tahap)</option>
+<option value="efektif">Efektif menurun (pokok tetap)</option>
+<option value="flat">Flat (bunga dari pokok awal)</option>
+</select></div>
+<div><label for="p">Jumlah pinjaman (Rp)</label><input id="p" type="text" value="500.000.000" inputmode="numeric" autocomplete="off"></div>
+<div><label for="t">Tenor (tahun)</label><input id="t" type="number" value="20" min="1" max="40"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Tahap bunga</h2>
+<div id="tiers"></div>
+<p class="hint">Isi lama tiap tahap dalam bulan. Lama tahap terakhir yang diisi dihitung otomatis: tenor dikurangi total bulan tahap sebelumnya. Kosongkan bunga untuk tahap yang tidak dipakai.</p>
+<p class="hint"><b id="alok"></b></p>
+</section>
+
+<section class="card">
+<h2>Pelunasan pokok dipercepat</h2>
+<div id="exl"></div>
+<button id="exadd" type="button">Tambah pelunasan</button>
+<p class="hint">Dibayar setelah cicilan bulan yang dipilih. Cicilan bulan berikutnya dihitung ulang dari sisa pokok dan sisa tenor. Pada skema flat, bunga dihitung ulang dari sisa pokok setelah pelunasan.</p>
+</section>
+
+<section class="card">
+<div class="tot">
+<div><small>Total pokok</small><b id="tp"></b></div>
+<div><small>Total bunga</small><b id="tb"></b></div>
+<div><small>Pelunasan dipercepat</small><b id="tx"></b></div>
+<div><small>Total pembayaran</small><b id="ta"></b></div>
+</div>
+<p class="hint" id="lunas"></p>
+<p class="err" id="err"></p>
+</section>
+
+<div class="tiers" id="sum"></div>
+
+<div class="wrap"><table>
+<thead><tr><th>Bulan</th><th>Bunga/thn</th><th>Cicilan</th><th>Pokok</th><th>Bunga</th><th>Pelunasan pokok</th><th>Sisa pinjaman</th></tr></thead>
+<tbody id="rows"></tbody>
+</table></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const num=v=>+(String(v).replace(/\D/g,''))||0;
+const dots=v=>String(v).replace(/\D/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+function sep(el){const pos=el.selectionStart,b=el.value.slice(0,pos).replace(/\D/g,'').length;el.value=dots(el.value);let i=0,c=0;while(i<el.value.length&&c<b){if(/\d/.test(el.value[i]))c++;i++;}try{el.setSelectionRange(i,i);}catch(e){}}
+const fmt=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const def=[['3',36],['5',36],['10',48],['20',120]];
+$('tiers').innerHTML=def.map((d,i)=>`<div class="tier" style="--c:var(--c${i})">
+<div class="hd">Tahap ${i+1}<span id="h${i}"></span></div>
+<div><label for="r${i}">Bunga (% per tahun)</label><input id="r${i}" type="number" value="${d[0]}" min="0" step="0.05" inputmode="decimal"></div>
+<div><label for="e${i}">Lama tahap (bulan)</label><input id="e${i}" type="number" value="${d[1]}" min="0" step="1" inputmode="numeric"></div></div>`).join('');
+
+function hitung(){
+const P=num($('p').value),n=Math.max(1,Math.round((+$('t').value||1)*12)),s=$('skema').value;
+const act=[];
+for(let i=0;i<4;i++){const v=$('r'+i).value.trim();$('h'+i).textContent='Tidak dipakai';$('e'+i).readOnly=false;if(v!=='')act.push({i,rate:+v,dur:+$('e'+i).value});}
+$('err').textContent='';
+if(!act.length){$('err').textContent='Isi minimal satu tahap bunga.';$('rows').innerHTML='';$('sum').innerHTML='';return;}
+let prev=0,pre=0;const tiers=[];
+act.forEach((a,k)=>{
+const last=k===act.length-1;
+let dm;
+if(last){dm=n-prev;const el=$('e'+a.i);el.value=Math.max(0,dm);el.readOnly=true;}
+else{dm=Math.round(a.dur||0);pre+=Math.max(0,dm);}
+if(dm<=0){$('h'+a.i).textContent=last?'Tidak ada sisa tenor':'Isi lama tahap (bulan)';return;}
+if(prev>=n){$('h'+a.i).textContent='Diabaikan (melebihi tenor)';return;}
+a.s=prev+1;a.e=Math.min(n,prev+dm);a.sp=0;a.sb=0;a.cnt=0;a.sx=0;a.min=Infinity;a.max=0;prev=a.e;tiers.push(a);
+});
+if(!tiers.length){$('err').textContent='Isi lama tahap minimal satu tahap.';$('rows').innerHTML='';$('sum').innerHTML='';$('alok').textContent='';return;}
+if(pre>=n&&act.length>1)$('err').textContent='Total bulan tahap sebelum terakhir ('+pre+') sama atau melebihi tenor ('+n+' bulan). Kurangi lama tahap.';
+$('alok').textContent='Tenor '+n+' bulan. Tahap sebelum terakhir: '+pre+' bulan. Sisa untuk tahap terakhir: '+Math.max(0,n-pre)+' bulan.';
+tiers.forEach(a=>{$('h'+a.i).textContent='Bulan '+a.s+' - '+a.e;});
+const ex={};
+extras.forEach(x=>{const mo=Math.round(+x.m),v=+x.v;if(mo>=1&&mo<=n&&v>0)ex[mo]=(ex[mo]||0)+v;});
+let bal=P,pay=0,ti=0,TP=0,TB=0,TX=0,flat=P,rec=true,lastM=0,out=[];
+for(let m=1;m<=n&&bal>0.5;m++){
+while(m>tiers[ti].e)ti++;
+const t=tiers[ti],r=t.rate/1200,k=n-m+1;
+if(m===t.s)rec=true;
+let bunga,pokok;
+if(s==='anuitas'){
+if(rec){pay=r===0?bal/k:bal*r/(1-Math.pow(1+r,-k));rec=false;}
+bunga=bal*r;pokok=pay-bunga;
+}else if(s==='flat'){bunga=flat*r;pokok=bal/k;}
+else{bunga=bal*r;pokok=bal/k;}
+bal=Math.max(0,bal-pokok);
+const x=Math.min(ex[m]||0,bal);bal-=x;
+if(x>0){rec=true;flat=bal;}
+const c=pokok+bunga;
+t.cnt++;t.last=m;lastM=m;
+t.sp+=pokok;t.sx+=x;t.sb+=bunga;t.min=Math.min(t.min,c);t.max=Math.max(t.max,c);TP+=pokok;TX+=x;TB+=bunga;
+out.push(`<tr><td>${m}</td><td>${t.rate}%</td><td>${fmt(c)}</td><td>${fmt(pokok)}</td><td>${fmt(bunga)}</td><td>${x>0?fmt(x):'-'}</td><td>${fmt(bal)}</td></tr>`);
+}
+$('tp').textContent=fmt(TP+TX);$('tb').textContent=fmt(TB);$('tx').textContent=fmt(TX);$('ta').textContent=fmt(TP+TX+TB);
+$('lunas').textContent=lastM<n?'Lunas lebih cepat di bulan '+lastM+' dari tenor '+n+' bulan.':'';
+$('rows').innerHTML=out.join('');
+$('sum').innerHTML=tiers.filter(t=>t.cnt).map(t=>{
+const c=Math.round(t.min)===Math.round(t.max)?fmt(t.min):fmt(t.min)+' - '+fmt(t.max);
+return `<div class="tc" style="--c:var(--c${t.i})"><h3>Bunga ${t.rate}% per tahun</h3>
+<div class="per">Bulan ${t.s} - ${t.last}</div>
+<div class="r"><small>Cicilan per bulan</small><b>${c}</b></div>
+<div class="r"><small>Total pokok</small><b>${fmt(t.sp+t.sx)}</b></div>
+${t.sx>0?`<div class="r"><small>Termasuk pelunasan</small><b>${fmt(t.sx)}</b></div>`:''}
+<div class="r"><small>Total bunga</small><b>${fmt(t.sb)}</b></div></div>`;}).join('');
+}
+const extras=[];
+function renderEx(){
+$('exl').innerHTML=extras.map((x,i)=>`<div class="ex"><div><label>Nilai pelunasan (Rp)</label><input type="text" data-i="${i}" data-f="v" value="${dots(x.v)}" inputmode="numeric" autocomplete="off"></div><div><label>Bulan ke</label><input type="number" data-i="${i}" data-f="m" value="${x.m}" min="1" inputmode="numeric"></div><button type="button" data-del="${i}">Hapus</button></div>`).join('');
+}
+$('exadd').addEventListener('click',()=>{extras.push({v:'',m:''});renderEx();hitung();});
+$('exl').addEventListener('input',e=>{const d=e.target.dataset;if(d.i!==undefined){if(d.f==='v')sep(e.target);extras[d.i][d.f]=d.f==='v'?e.target.value.replace(/\D/g,''):e.target.value;hitung();}});
+$('exl').addEventListener('click',e=>{const d=e.target.dataset.del;if(d!==undefined){extras.splice(+d,1);renderEx();hitung();}});
+document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',hitung));
+$('p').addEventListener('input',e=>sep(e.target));
+hitung();
+</script>
+</body>
+</html>
