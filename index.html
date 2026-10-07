@@ -105,7 +105,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 <p class="hint">Isi Data KPR terkait Harga Properti, Tenor, dan DP.</p>
 <p class="hint">Jika tidak ada Biaya Bank dan/atau Biaya Notaris, isi di Tabel Down Payment dengan pilihan tidak ada biaya.</p>
-<p class="hint">Isi langsung Total DP jika Net DP Pokok ingin dihitung otomatis setelah dipotong biaya.</p>
+<p class="hint">Isi langsung Total DP jika Net DP Pokok ingin dihitung otomatis setelah dipotong biaya jika biaya tidak termasuk plafond.</p>
+<p class="hint">Jika Biaya termasuk Plafond maka Rubah DP hanya di DP Pokok.</p>
 </section>
 
 <section class="card">
@@ -415,13 +416,14 @@ $('tnot').value=sn;$('tnot2').value=sn;$('trn').value=H&&tn?+(tn/H*100).toFixed(
 if(tdpSrc==='t'){const T=num($('tdp').value);$('dpp').value=$('tdp').value===''?'':dots(inc?T:Math.max(0,T-tb-tn));}
 else{const td=inc?num($('dpp').value):num($('dpp').value)+tb+tn;$('tdp').value=td?dots(td):'';}
 const d=num($('dpp').value);
+$('tdp').readOnly=inc;$('tdp').tabIndex=inc?-1:0;
 const bad=!inc&&tdpSrc==='t'&&$('tdp').value!==''&&num($('tdp').value)<tb+tn;
 $('dperr').textContent=bad?'Jumlah DP tidak boleh kurang dari Biaya Bank dan Notaris !':'';$('tdp').style.borderColor=bad?'var(--c3)':'';
 $('p').value=H?dots(Math.max(0,H+(inc?tb+tn:0)-d)):'';}
 document.addEventListener('input',e=>{const el=e.target,id=el.id;
 if(['bba','bbt','nta','ntt'].includes(id)){const bank=id[0]==='b',ada=id[2]==='a';
 $(bank?'bba':'nta').checked=ada;$(bank?'bbt':'ntt').checked=!ada;setGroup(bank?GB:GN,ada);recalcDP();return;}
-if(id==='ink'||id==='tdk'){const inc=id==='ink';$('ink').checked=inc;$('tdk').checked=!inc;tdpSrc='d';recalcDP();return;}
+if(id==='ink'||id==='tdk'){const inc=id==='ink';$('ink').checked=inc;$('tdk').checked=!inc;recalcDP();if(inc)tdpSrc='d';return;}
 if(MONEY.includes(id))sep(el);
 const k=id.slice(1);
 if(id[0]==='r'&&k in dpSrc)dpSrc[k]='r';
